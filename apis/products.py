@@ -33,12 +33,6 @@ example_product = {
     "image_url": "https://www.google.com/images/branding/googlelogo/2x/googlelogo_color_272x92dp.png"
 }
 
-
-@app.route('/', methods=['GET'])
-def index():
-    print('test call, if this don\'t print you fucked')
-    return jsonify(example_product)
-
 #create product
 @app.route(f'/{ELASTIC_PREFIX}/create', methods=['POST'])
 def publish():
@@ -49,9 +43,6 @@ def publish():
     document = content['product_document']
     print(document)
     resp = es.index(index='products', document = document, id=document['product_id'])
-    print(resp)
-    print("*"*30 + "PUBLISHED" + "*"*30)
-    print(resp['result'])
     return jsonify(resp)
 
 #search for a product
