@@ -26,8 +26,8 @@ image_url: varchar ***maybe an array of varchars, for multiple pictures***
 """
 
 example_product = {
-    "product_id": 1,
-    "supplier_id": 1,
+    "_product_id": 1,
+    "_supplier_id": 1,
     "description": "This is a test product",
     "price": 1.00,
     "image_url": "https://www.google.com/images/branding/googlelogo/2x/googlelogo_color_272x92dp.png"
@@ -39,14 +39,21 @@ def publish():
     """
     Publish product to search engine
     """
-    content = request.json
-    document = content['product_document']
-    print(document)
-    resp = es.index(index='products', document = document, id=document['product_id'])
-    return jsonify(resp)
+    resp = '{}'
+    try:
+        content = request.json
+        doc = content['product']
+        #print a bunch of stars
+        print('*' * 100)
+        print("doc: ", doc)
+        print('*' * 100)
+        resp = es.index(index='products', body=doc , doc_type="_doc", id=doc['_product_id'])
+    except Exception as e:
+        resp = {"error": str(e)}
+    return resp
 
 #search for a product
-@app.route(f'/{ELASTIC_PREFIX}/search', methods=['POST'])
+@app.route(f'/{ELASTIC_PREFIX}/search', methods=['GET'])
 def search():
     content = request.json
     search_param = content['search_param']
@@ -58,7 +65,7 @@ def search():
 def update():
 
     content = request.json
-    document = content['product_document']
+    document = content['product']
     resp = es.update(index='products', id=document['product_id'], body={"doc": document})
     return jsonify(resp)    
 
