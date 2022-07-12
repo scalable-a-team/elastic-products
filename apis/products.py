@@ -15,8 +15,6 @@ es = Elasticsearch(
     port=443
 )
 
-app.run(host='0.0.0.0', port=5000, debug=True)
-
 #PRODUCT LISTING CHARACTERISTICS
 """
 A product is made up of
@@ -36,7 +34,7 @@ example_product = {
 }
 
 
-@app.route('/', methods['GET'])
+@app.route('/', methods=['GET'])
 def index():
     print('test call, if this don\'t print you fucked')
     return jsonify(example_product)
