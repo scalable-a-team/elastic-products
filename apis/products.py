@@ -1,14 +1,16 @@
-from flask import Flask, jsonify, render_template, request, json
+from flask import Flask, jsonify, request, json
 from tomlkit import document
+from prod_images import upload_product_photo
 from config import *
 from elasticsearch import Elasticsearch, RequestsHttpConnection
 from requests_aws4auth import AWS4Auth
 from accesskeys.aws_secrets import * #This is hidden from github, but you can use this to store your AWS credentials
 
+
 app = Flask(__name__)
 es = Elasticsearch(
     hosts=ES_HOST,
-    http_auth=AWS4Auth(AWSAccessKeyId, AWSSecretKey, 'ap-southeast-1', 'es'), #For signing the request to Elasticsearch
+    http_auth=AWS4Auth(AWS_ACCESS_KEY_ID, AWS_SECRET_KEY, 'ap-southeast-1', 'es'), #For signing the request to Elasticsearch
     verify_certs=True,
     use_ssl=True,
     connection_class=RequestsHttpConnection,
@@ -36,17 +38,17 @@ example_product = {
 #create product
 @app.route(f'/{ELASTIC_PREFIX}/create', methods=['POST'])
 def publish():
-    """
-    Publish product to search engine
-    """
-    resp = '{}'
+    resp = {}
     try:
-        content = request.json
-        doc = content['product']
-        #print a bunch of stars
-        print('*' * 100)
-        print("doc: ", doc)
-        print('*' * 100)
+        content = request.form
+        doc = jsonify(content['product'])
+        doc = json.loads(doc.json)
+        print(doc)
+        picture = request.files['image']
+        pictureurl = upload_product_photo(doc, picture)
+        if type(pictureurl) == dict:
+            raise Exception(pictureurl['error'])
+        doc['image_url'] = pictureurl
         resp = es.index(index='products', body=doc , doc_type="_doc", id=doc['_product_id'])
     except Exception as e:
         resp = {"error": str(e)}
@@ -55,25 +57,37 @@ def publish():
 #search for a product
 @app.route(f'/{ELASTIC_PREFIX}/search', methods=['GET'])
 def search():
-    content = request.json
-    search_param = content['search_param']
-    resp = es.search(index='products', body={"query": {"match": {"description": search_param}}})
-    return jsonify(resp)
+    resp = {}
+    try:
+        content = request.json
+        search_param = content['search_param']
+        resp = es.search(index='products', body={"query": {"match": {"description": search_param}}})
+    except Exception as e:
+        resp = {"error": str(e)}
+    return resp  
 
 
 @app.route(f'/{ELASTIC_PREFIX}/update', methods=['POST'])
 def update():
-
-    content = request.json
-    document = content['product']
-    resp = es.update(index='products', id=document['product_id'], body={"doc": document})
-    return jsonify(resp)    
+    resp={}
+    try:
+        content = request.json
+        doc = content['product']
+        resp = es.update(index='products', body=doc , doc_type="_doc", id=doc['_product_id'])
+    except Exception as e:
+        resp = {"error": str(e)}
+    return resp    
 
 @app.route(f'/{ELASTIC_PREFIX}/delete', methods=['DELETE'])
 def delete():
-    content = request.json
-    product_id = content['product_id']
-    resp = es.delete(index='products', id=product_id)
-    return jsonify(resp)
+    resp={}
+    try:
+        content = request.json
+        doc = content['product']
+        product_id = doc['product_id']
+        resp = es.delete(index='products', id=product_id)
+    except Exception as e:
+        resp = {"error": str(e)}
+    return resp
 
     

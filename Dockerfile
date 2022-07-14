@@ -10,5 +10,5 @@ COPY ./apis /app/
 
 ENV FLASK_APP=app
 
-CMD ["gunicorn", "--bind", "0.0.0.0:5000", "wsgi:app" ]
+CMD ["gunicorn", "--bind", "0.0.0.0:5003", "wsgi:app" ]
 EXPOSE 5000
