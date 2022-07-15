@@ -4,7 +4,7 @@ from prod_images import upload_product_photo
 from config import *
 from elasticsearch import Elasticsearch, RequestsHttpConnection
 from requests_aws4auth import AWS4Auth
-# from accesskeys.aws_secrets import * #This is hidden from github, but you can use this to store your AWS credentials
+from accesskeys.aws_secrets import * 
 
 
 app = Flask(__name__)
