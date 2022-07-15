@@ -1,5 +1,5 @@
+from os import write
 from flask import Flask, jsonify, request, json
-from tomlkit import document
 from prod_images import upload_product_photo
 from config import *
 from elasticsearch import Elasticsearch, RequestsHttpConnection
@@ -40,15 +40,8 @@ example_product = {
 def publish():
     resp = {}
     try:
-        content = request.form
-        doc = jsonify(content['product'])
-        doc = json.loads(doc.json)
-        print(doc)
-        picture = request.files['image']
-        pictureurl = upload_product_photo(doc, picture)
-        if type(pictureurl) == dict:
-            raise Exception(pictureurl['error'])
-        doc['image_url'] = pictureurl
+        content = request.json
+        doc = content['product']
         resp = es.index(index='products', body=doc , doc_type="_doc", id=doc['_product_id'])
     except Exception as e:
         resp = {"error": str(e)}
@@ -90,4 +83,16 @@ def delete():
         resp = {"error": str(e)}
     return resp
 
-    
+
+#upload a photo to product s3 bucket
+@app.route(f'/{ELASTIC_PREFIX}/upload_photo', methods=['POST'])
+def upload_photo():
+    resp = {}
+    try:
+        seller_id = request.form['seller_id']
+        product_id = request.form['product_id']
+        image = request.files
+        upload_product_photo()
+    except Exception as e:
+        resp = {"error": str(e)}
+    return resp
