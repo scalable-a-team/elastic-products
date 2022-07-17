@@ -10,5 +10,6 @@ COPY ./apis /app/
 
 ENV FLASK_APP=app
 
-CMD ["gunicorn", "--bind", "0.0.0.0:5003", "wsgi:app" ]
+ENTRYPOINT [ "python" ]
+CMD [ "main.py" ]
 EXPOSE 5000

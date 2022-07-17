@@ -27,13 +27,28 @@ price: float
 image_url: varchar ***maybe an array of varchars, for multiple pictures***
 """
 
-example_product = {
+example_product = { #this will just be the main info that is cached in ES
     "_product_id": 1, #hidden
     "_supplier_id": 1, #hidden
     "product_name": "Google Logo",
     "description": "This is a test product, the description is here",
     "price": 1.00,
     "image_url": "https://www.google.com/images/branding/googlelogo/2x/googlelogo_color_272x92dp.png"
+}
+
+
+product_full = {
+    "_product_id": "",
+    "_supplier_id": "",
+    "seller name": "",
+    "product_name": "",
+    "description": "",
+    "price": 0.00,
+    "images": [],
+    "reviews": [],
+    "tags": [],
+    "categories": [],
+
 }
 
 #create product
@@ -55,6 +70,7 @@ def search():
     try:
         content = request.json
         search_param = content['search_param']
+        print(search_param)
         resp = es.search(index='products', body={"query": {"match": {"description": search_param}}})
     except Exception as e:
         resp = {"error": str(e)}
@@ -92,8 +108,8 @@ def upload_photo():
     try:
         seller_id = request.form['seller_id']
         product_id = request.form['product_id']
-        image = request.files
-        upload_product_photo()
+        image = request.files['image']
+        resp = upload_product_photo(product_id, seller_id, image)
     except Exception as e:
         resp = {"error": str(e)}
     return resp

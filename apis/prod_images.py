@@ -10,16 +10,19 @@ from urllib.parse import urlsplit, urlunsplit
 s3 = boto3.resource(**config.s3_config)
 
 #Upload photo to bucket and return the url
-def upload_product_photo(product: json, image):
+def upload_product_photo(product_id, seller_id, image):
     try:
-        print("Trying to upload file")
+        # print("Trying to upload file")
+        # print([i for i in s3.buckets.all()])
         #Get the file name
-        bucket = product['_product_id']
+        bucket = "scalable-final-products"
         timestamp = datetime.utcnow().isoformat()
-        filename = f"{timestamp}"
-        print(f'bucket: {bucket}, filename: {filename}, timestamp: {timestamp}')
-
-        s3.Bucket(bucket).put_object(Key=filename, Body=image)
+        filename = f"{seller_id}-{product_id}-{timestamp}-{image.filename}"
+        # print(f'bucket: {bucket}, filename: {filename}, timestamp: {timestamp}')
+        
+        # client.upload_file(image, bucket, filename)
+        # s3.create_bucket(Bucket=bucket)
+        s3.Bucket(bucket).Object(filename).put(Body=image.read())
 
         print('Uploaded file to S3')
 
@@ -36,6 +39,5 @@ def upload_product_photo(product: json, image):
 def _get_public_s3_url(s3_presigned_url: str):
     url = list(urlsplit(s3_presigned_url))
     s3_public_split = urlsplit(os.environ.get('S3_ENDPOINT_URL'))
-    # s3_public_split = urlsplit("https://tanpantz.com:9000")
     url[1] = f"{s3_public_split.hostname}{s3_public_split.path}"
     return urlunsplit(url)

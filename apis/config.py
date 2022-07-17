@@ -6,7 +6,6 @@ ES_HOST = 'https://search-scalable-final-proj-knlaqfap2p2aavmspdlhxboypm.ap-sout
 ES_PORT = '9200'
 ELASTIC_URI = f'{ES_HOST}:{ES_PORT}'
 
-
 # TODO: IMPORTANT: UNCOMMENT THIS BEFORE PUSHING
 s3_config = {
     "service_name": "s3",
@@ -16,11 +15,3 @@ s3_config = {
 }
 AWS_ACCESS_KEY_ID = os.environ.get('AWS_ACCESS_KEY_ID')
 AWS_SECRET_KEY = os.environ.get('AWS_SECRET_KEY')
-
-#COMMENT THIS OUT WHEN PUSHING
-# s3_config = {
-#     "service_name": "s3",
-#     "aws_access_key_id": "rootateam",
-#     "aws_secret_access_key": "ateamrootpwd",
-#     "endpoint_url": "https://tanpantz.com:9000",
-# }
