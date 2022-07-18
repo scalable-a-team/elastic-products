@@ -6,8 +6,8 @@ from config import *
 from elasticsearch import Elasticsearch, RequestsHttpConnection
 from requests_aws4auth import AWS4Auth
 from accesskeys.acess_keys import * 
-import sqlalchemy as db
-from sqlalchemy import Table, Column, Integer, String, DateTime, ForeignKey, Boolean, Float, Text, MetaData
+from inserts import *
+
 
 app = Flask(__name__)
 es = Elasticsearch(
@@ -19,7 +19,6 @@ es = Elasticsearch(
     port=443
 )
 
-engine = db.create_engine(POSTGRES_DATABASE)
 
 #PRODUCT LISTING CHARACTERISTICS
 """
@@ -98,49 +97,57 @@ def upload_photo():
         seller_id = request.form['seller_id']
         product_id = request.form['product_id']
         image = request.files['image']
-        resp = upload_product_photo(product_id, seller_id, image)
+        s3_url = upload_product_photo(product_id, seller_id, image) #gets the s3 public url
+        resp = {"s3_url": s3_url}
     except Exception as e:
         resp = {"error": str(e)}
     return resp
 
-# #publish a product to mongodb using sqalchemy
-# @app.route(f'/{PRODUCT_LISTING_PREFIX}/publish', methods=['POST'])
-# def publish_product():
-#     with engine.connect() as conn:
-#         try:
-#             content = request.json
-#             product = content['product']
+#publish a product to mongodb using sqalchemy
+@app.route(f'/{PRODUCT_LISTING_PREFIX}/create/product', methods=['POST'])
+def publish_product():
+    try:
+        content = request.json
+        product = content['product']
 
-#             product_id = product['product_id']
-#             seller_id = product['seller_id']
-#             seller_name = product['seller_name']
-#             product_name = product['product_name']
-#             description = product['description']
-#             price = product['price']
-#             images = product['images']
-#             reviews = product['reviews']
-#             tags = product['tags']
-#             categories = product['categories']
+        seller_name = product['seller_name']
+        seller_id = int(product['seller_id'])
+        product_name = product['product_name']
+        description = product['description']
+        price = float(product['price'])
 
-#             conn.execute(text(f"INSERT INTO products (_product_id, _supplier_id, seller_name, product_name, description, \
-#             price, images, reviews, tags, categories) VALUES ({product_id}, {seller_id}, '{seller_name}', '{product_name}', \
-#                 '{description}', {price}, '{images}', '{reviews}', '{tags}', '{categories}')"))
-#         except Exception as e:
-#             return {"error": str(e)}
+        images = product['image_url'] #should be a list of urls
+        print(type(images))
 
-product_full = {
-    "_product_id": "",
-    "_supplier_id": "",
-    "seller name": "",
-    "product_name": "",
-    "description": "",
-    "price": 0.00,
-    "images": [],
-    "reviews": [],
-    "tags": [],
-    "categories": [],
-}
+        image_url = [image for image in images]
+        product = create_product(seller_id = seller_id, seller_name = seller_name, product_name = product_name, description= description, price=price)
 
-@app.route(f'/{PRODUCT_LISTING_PREFIX}/listing/<product_id>', methods=['GET'])
-def get_product_page(product_id):
-    ...
+        photo_uploads = [create_photo(image, product) for image in image_url]
+
+        return {"product": product.__repr__(), "photo_uploads": [photo.__repr__() for photo in photo_uploads]}
+    except Exception as e:
+        return {"error": str(e)}
+
+
+@app.route(f'/{PRODUCT_LISTING_PREFIX}/create/category', methods=['POST'])
+def make_new_category():
+    content = request.json
+    category = content['category']
+    cat = create_category(category)
+    return cat.__repr__()
+
+@app.route(f'/{PRODUCT_LISTING_PREFIX}/create/review', methods=['POST'])
+def make_new_review():
+    content = request.json
+    name = content['name']
+    review = content['category']
+    stars = int(content['stars'])
+    rev = create_review(name, review, stars)
+    return rev.__repr__()
+
+@app.route(f'/{PRODUCT_LISTING_PREFIX}/create/tag', methods=['POST'])
+def make_new_tag():
+    content = request.json
+    tag = content['tag']
+    tag_t = create_tag(tag)
+    return tag_t.__repr__()
