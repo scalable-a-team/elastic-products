@@ -24,12 +24,12 @@ class Product(Base):
 
     tags = relationship("Tag", secondary=tag_to_product_association)
     categories = relationship("Category", secondary=cat_to_product_association)
-    def __init__(self, seller_name, product_name, description, price, image_url):
+
+    def __init__(self, seller_name, product_name, description, price):
         self.seller_name = seller_name
         self.product_name = product_name
         self.description = description
         self.price = price
-        self.image_url = image_url
 
 #*******************************************IMAGES**********************************************************
 #One to many relationship, products has many images
@@ -51,6 +51,11 @@ class Review(Base):
     customer_name = Column(String)
     review_text = Column(String)
     stars = Column(Integer)
+    product = relationship("Product", backref="products")
+    def __init__(self, customer_name, review_text, stars):
+        self.customer_name = customer_name
+        self.review_text = review_text
+        self.stars = stars
 
 #*******************************************TAGS**********************************************************
 
@@ -59,6 +64,8 @@ class Tag(Base):
     __tablename__ = 'tags'
     _id = Column(Integer, primary_key=True)
     tag_name = Column(String)
+    def __init__(self, tag_name):
+        self.tag_name = tag_name
 
 
 #*******************************************CATEGORIES**********************************************************
@@ -68,4 +75,6 @@ class Category(Base):
     __tablename__ = 'categories'
     _id = Column(Integer, primary_key=True)
     category_name = Column(String)
+    def __init__(self, category_name):
+        self.category_name = category_name
 

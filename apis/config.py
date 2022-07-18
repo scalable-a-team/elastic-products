@@ -1,5 +1,6 @@
 import os
 
+
 ELASTIC_PREFIX = 'es' #IMPORTANT: This will be static prefix for frontend to querey product search engine, can just change this to change all apis
 PRODUCT_LISTING_PREFIX = 'products'
 
