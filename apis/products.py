@@ -7,6 +7,7 @@ from elasticsearch import Elasticsearch, RequestsHttpConnection
 from requests_aws4auth import AWS4Auth
 from accesskeys.aws_secrets import * 
 import sqlalchemy as db
+from sqlalchemy import Table, Column, Integer, String, DateTime, ForeignKey, Boolean, Float, Text, MetaData
 
 app = Flask(__name__)
 es = Elasticsearch(
@@ -18,10 +19,7 @@ es = Elasticsearch(
     port=443
 )
 
-
-
-engine = db.create_engine("mongodb+srv://doadmin:LQHj5d7O231vx496@db-mongodb-sgp1-76267-5dcacb12.mongo.ondigitalocean.com/admin")
-# engine = db.create_engine(f"mongodb+srv://{MONGO_DB_ADMIN}:{MONGO_DB_PASSWORD}@db-mongodb-sgp1-76267-5dcacb12.mongo.ondigitalocean.com/admin")
+engine = db.create_engine(POSTGRES_DATABASE)
 
 #PRODUCT LISTING CHARACTERISTICS
 """
@@ -105,7 +103,74 @@ def upload_photo():
         resp = {"error": str(e)}
     return resp
 
+#just use this the first time the database needs to be created, not to really be used in prod
+@app.route(f'/{PRODUCT_LISTING_PREFIX}/create_db_table', methods=['POST'])
+def create_db_table():
+    resp = {}
+    try:
+        sql = text("CREATE TABLE IF NOT EXISTS products (\
+            _product_id INTEGER PRIMARY KEY,\
+            _supplier_id INTEGER,\
+            seller_name VARCHAR NOT NULL,\
+            product_name VARCHAR NOT NULL,\
+            description VARCHAR,\
+            price FLOAT NOT NULL,\
+            images text[],\
+            reviews text[],\
+            tags text[],\
+            category VARCHAR NOT NULL,\
+            created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,\
+        );")
+        engine.execute(sql)
+        resp = {"success": "true"}
+    except Exception as e:
+        resp = {"error": str(e)}
+    return resp
 
+
+#product class for the product listing
+class Product:
+    def __init__(self, product_id, supplier_id, seller_name, product_name, description, price, images, reviews, tags, category, created_at):
+        self.tablename = "products"
+        self.product_id = product_id
+        self.supplier_id = supplier_id
+        self.seller_name = seller_name
+        self.product_name = product_name
+        self.description = description
+        self.price = price
+        self.images = images
+        self.reviews = reviews
+        self.tags = tags
+        self.category = category
+        self.created_at = created_at
+    def __repr__(self):
+        return f"Product({self.product_id}, {self.supplier_id}, {self.seller_name}, {self.product_name}, {self.description}, {self.price}, {self.images}, {self.reviews}, {self.tags}, {self.category}, {self.created_at})"
+    def __str__(self):
+        return f"Product({self.product_id}, {self.supplier_id}, {self.seller_name}, {self.product_name}, {self.description}, {self.price}, {self.images}, {self.reviews}, {self.tags}, {self.category}, {self.created_at})"
+    def __eq__(self, other):
+        return self.product_id == other.product_id
+    def __hash__(self):
+        return hash(self.product_id)
+    def __lt__(self, other):
+        return self.product_id < other.product_id
+    def __le__(self, other):
+        return self.product_id <= other.product_id
+    def __gt__(self, other):
+        return self.product_id > other.product_id
+    def __ge__(self, other):
+        return self.product_id >= other.product_id
+    def __ne__(self, other):
+        return self.product_id != other.product_id
+
+class Reviews:
+    def __init__(**args):
+        return "Not yet implemented"
+class Tags:
+    def __init__(**args):
+        return "Not yet implemented"
+class Categories:
+    def __init__(**args):
+        return "Not yet implemented"
 
 #publish a product to mongodb using sqalchemy
 @app.route(f'/{PRODUCT_LISTING_PREFIX}/publish', methods=['POST'])
