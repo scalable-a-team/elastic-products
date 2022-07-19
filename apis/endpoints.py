@@ -152,7 +152,7 @@ def publish_product_elastic(product_id, seller_id, product_name, description, pr
         "price": price
     })
 
-    resp = es.index(index='products', body=doc , doc_type="_doc", id=product_id)
+    resp = es.index(index='products', body=doc, id=product_id)
     return resp
 
 
