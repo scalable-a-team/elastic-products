@@ -1,4 +1,4 @@
-from products import app
+from endpoints import app
 import os
 
 if __name__ == '__main__':
