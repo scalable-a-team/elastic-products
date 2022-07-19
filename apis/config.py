@@ -4,28 +4,25 @@ from accesskeys.acess_keys import *
 
 ELASTIC_PREFIX = 'es' #IMPORTANT: This will be static prefix for frontend to querey product search engine, can just change this to change all apis
 PRODUCT_LISTING_PREFIX = 'products'
+user = os.environ.get('POSTGRES_USER')
+password = os.environ.get('POSTGRES_PASSWORD')
+host = os.environ.get('POSTGRES_HOST')
 
-ES_HOST = 'https://search-scalable-final-proj-knlaqfap2p2aavmspdlhxboypm.ap-southeast-1.es.amazonaws.com/'
-ES_PORT = '9200'
+
+POSTGRES_DATABASE = f"postgresql://{user}:{password}@{host}"
+
+ES_HOST = os.environ.get('ES_HOST')
+ES_PORT = os.environ.get('ES_PORT')
+
 ELASTIC_URI = f'{ES_HOST}:{ES_PORT}'
 
-os.environ.setdefault("S3_ACCESS_KEY_ID", AWS_ACCESS_KEY_ID)
-os.environ.setdefault("S3_SECRET_KEY", AWS_SECRET_KEY)
-os.environ.setdefault("S3_ENDPOINT_URL", "https://scalable-final-products.s3.ap-southeast-1.amazonaws.com/")
+AWS_ACCESS_KEY_ID = os.environ.get('AWS_ACCESS_KEY_ID')
+AWS_SECRET_KEY = os.environ.get('AWS_SECRET_KEY')
+
 s3_config = {
     "service_name": "s3",
     "aws_access_key_id": AWS_ACCESS_KEY_ID,
     "aws_secret_access_key": AWS_SECRET_KEY,
-    "endpoint_url": "https://scalable-final-products.s3.ap-southeast-1.amazonaws.com/"
+    "endpoint_url": os.environ.get('S3_ENDPOINT_URL'),
 }
 
-
-# TODO: IMPORTANT: UNCOMMENT THIS BEFORE PUSHING
-# s3_config = {
-#     "service_name": "s3",
-#     "aws_access_key_id": os.environ.get('S3_ACCESS_KEY'),
-#     "aws_secret_access_key": os.environ.get('S3_SECRET'),
-#     "endpoint_url": os.environ.get('S3_ENDPOINT_URL'),
-# }
-AWS_ACCESS_KEY_ID = os.environ.get('AWS_ACCESS_KEY_ID')
-AWS_SECRET_KEY = os.environ.get('AWS_SECRET_KEY')
