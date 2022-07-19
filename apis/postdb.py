@@ -2,6 +2,7 @@ from sqlalchemy import Column, Numeric, String, Integer, ForeignKey, DateTime, B
 from sqlalchemy.orm import relationship
 from base import Base
 from flask import jsonify
+import datetime as dt
 
 tag_to_product_association = Table('product_tags', Base.metadata,
     Column('product_id', Integer, ForeignKey('products._id')),
@@ -32,6 +33,7 @@ class Product(Base):
         self.product_name = product_name
         self.description = description
         self.price = price
+        self.created_at = dt.datetime.utcnow()
     
     def __repr__(self):
         return {
