@@ -72,23 +72,19 @@ def delete():
         resp = {"error": str(e)}
     return resp
 
-
-from base import Session
-
 # **********************GET A PRODUCT FROM POSTGRES DB***********************
 # This method will be used to get a product from postgres
 # you need to specify the product_id in the request
 # the product_id is the primary key for the product in postgres
 @app.route(f'/{PRODUCT_LISTING_PREFIX}/<id>', methods=['GET'])
 def fetch_product(id):
-    session = Session()
+
     resp = {}
     id = int(id)
     try:
-        resp = get_product(id, session).__repr__()
+        resp = get_product(id).__repr__()
     except Exception as e:
         resp = {"error": str(e)}
-    session.close()
     return resp
 
 # **********************POST A PRODUCT TO POSTGRES DB***********************
@@ -100,7 +96,7 @@ def fetch_product(id):
 # these need to be in list format as well to properly work with the POST request
 @app.route(f'/{PRODUCT_LISTING_PREFIX}/create/product', methods=['POST'])
 def publish_product():
-    session = Session()
+
     resp = {}
     try:
         content = request.json
@@ -115,7 +111,12 @@ def publish_product():
         images = product['image_url'] #should be a list of urls
 
         image_url = [image for image in images]
-        product = create_product(seller_id = seller_id, seller_name = seller_name, product_name = product_name, description= description, price=price, session=session)
+        product = create_product(
+            seller_id = seller_id, 
+            seller_name = seller_name, 
+            product_name = product_name, 
+            description= description, 
+            price=price)
 
         photo_uploads = [create_photo(image, product) for image in image_url]
         elastic_response = publish_product_elastic(
@@ -148,11 +149,10 @@ def publish_product_elastic(product_id, seller_id, product_name, description, pr
 
 @app.route(f'/{PRODUCT_LISTING_PREFIX}/create/category', methods=['POST'])
 def make_new_category():
-    session = Session()
+
     content = request.json
     category = content['category']
-    cat = create_category(category, session)
-    session.close()
+    cat = create_category(category)
     return cat.__repr__()
 
 
@@ -160,7 +160,7 @@ def make_new_category():
 
 @app.route(f'/{PRODUCT_LISTING_PREFIX}/create/review', methods=['POST'])
 def make_new_review():
-    session = Session()
+
     content = request.json
     name = content['name']
     review = content['review']
@@ -174,10 +174,10 @@ def make_new_review():
 
 @app.route(f'/{PRODUCT_LISTING_PREFIX}/create/tag', methods=['POST'])
 def make_new_tag():
-    session = Session()
+
     content = request.json
     tag = content['tag']
-    tag_t = create_tag(tag, session)
+    tag_t = create_tag(tag)
     return tag_t.__repr__()
 
 
@@ -204,24 +204,24 @@ def upload_photo():
 
 @app.route(f'/{PRODUCT_LISTING_PREFIX}/categories', methods=['GET'])
 def fetch_categories():
-    session = Session()
-    lst = get_all_categories(session)
-    session.close()
+
+    lst = get_all_categories()
+
     return {"categories": [cat.__repr__() for cat in lst]}
 
 
 @app.route(f'/{PRODUCT_LISTING_PREFIX}/tags', methods=['GET'])
 def fetch_tags():
-    session = Session()
-    lst = get_all_tags(session)
-    session.close()
+
+    lst = get_all_tags()
+
     return {"tags": [tag.__repr__() for tag in lst]}
 
 @app.route(f'/{PRODUCT_LISTING_PREFIX}/all_products', methods=['GET'])
 def fetch_all_products():
-    session = Session(session)
+
     lst = get_all_products()
-    session.close()
+
 
     return {"products": [prod.__repr__() for prod in lst]}
 
@@ -229,16 +229,15 @@ def fetch_all_products():
 #since we delete database need to clear elasticsearch too
 @app.route(f'/admin/delete/database/all', methods=['DELETE'])
 def delete_database():
-    session = Session()
+
     resp = {}
     try:
-        RIP_METHOD(session)
+        RIP_METHOD()
         
         resp = {"message": "database deleted"}
     except Exception as e:
         resp = {"error": str(e)}
 
-    session.close()
     return resp
 
 @app.route(f'/admin/delete/elasticsearch/all', methods=['DELETE'])

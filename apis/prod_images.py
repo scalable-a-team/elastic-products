@@ -1,6 +1,5 @@
 import os, sys
 import config
-import json
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(ROOT_DIR)
 import boto3
