@@ -5,7 +5,6 @@ from prod_images import upload_product_photo
 from config import *
 from elasticsearch import Elasticsearch, RequestsHttpConnection
 from requests_aws4auth import AWS4Auth
-from accesskeys.acess_keys import * 
 from inserts import *
 
 

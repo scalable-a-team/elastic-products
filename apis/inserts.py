@@ -1,4 +1,3 @@
-from numpy import product
 from requests import session
 from base import Session, Engine, Base
 from postdb import Product, Image, Review, Tag, Category
