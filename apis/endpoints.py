@@ -97,7 +97,7 @@ def fetch_product(id):
 # these need to be in list format as well to properly work with the POST request
 @app.route(f'/{PRODUCT_LISTING_PREFIX}/create/product', methods=['POST'])
 def publish_product():
-
+    session = Session()
     resp = {}
     try:
         content = request.json
@@ -151,7 +151,7 @@ def publish_product_elastic(product_id, seller_id, product_name, description, pr
 
 @app.route(f'/{PRODUCT_LISTING_PREFIX}/create/category', methods=['POST'])
 def make_new_category():
-
+    session = Session()
     content = request.json
     category = content['category']
 
@@ -166,7 +166,7 @@ def make_new_category():
 
 @app.route(f'/{PRODUCT_LISTING_PREFIX}/create/review', methods=['POST'])
 def make_new_review():
-
+    session = Session()
     content = request.json
     name = content['name']
     review = content['review']
@@ -182,7 +182,7 @@ def make_new_review():
 
 @app.route(f'/{PRODUCT_LISTING_PREFIX}/create/tag', methods=['POST'])
 def make_new_tag():
-
+    session = Session()
     content = request.json
     tag = content['tag']
 
