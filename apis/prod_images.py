@@ -26,18 +26,25 @@ def upload_product_photo(product_id, seller_id, image):
 
         print('Uploaded file to S3')
 
-        presign_url = s3.meta.client.generate_presigned_url(
-            'get_object',
-            Params={'Bucket': bucket, 'Key': filename},
-            ExpiresIn=3600
-        )
-        return _get_public_s3_url(presign_url)
+
+        #no longer using presign_url, return regular url
+        # presign_url = s3.meta.client.generate_presigned_url(
+        #     'get_object',
+        #     Params={'Bucket': bucket, 'Key': filename},
+        #     ExpiresIn=3600
+        # )
+        return get_public_s3_url(filename)
     except Exception as e:
         return {"error": str(e)}
 
 
-def _get_public_s3_url(s3_presigned_url: str):
-    url = list(urlsplit(s3_presigned_url))
-    s3_public_split = urlsplit(os.environ.get('S3_ENDPOINT_URL'))
-    url[1] = f"{s3_public_split.hostname}{s3_public_split.path}"
-    return urlunsplit(url)
+def get_public_s3_url(filename):
+    return f"{os.environ.get('S3_ENDPOINT_URL')}{filename}"
+
+
+
+# def _get_public_s3_url(s3_presigned_url: str):
+#     url = list(urlsplit(s3_presigned_url))
+#     s3_public_split = urlsplit(os.environ.get('S3_ENDPOINT_URL'))
+#     url[1] = f"{s3_public_split.hostname}{s3_public_split.path}"
+#     return urlunsplit(url)
