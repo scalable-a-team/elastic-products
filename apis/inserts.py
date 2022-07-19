@@ -10,47 +10,39 @@ def create_product(
     product_name="Default Product", 
     description="Default Description", 
     price=0.0, tags = [], 
-    categories = []):
+    categories = [],
+    session = None):
 
-    session = Session()
     product = Product(seller_id, seller_name, product_name, description, price)
     [product.add_tag(session.query(Tag).get(tag)) for tag in tags]
     # product.categories = categories
     product_to_db(product, session)
-    session.close()
     return product
 
-def create_photo(image_url, product):
-    session = Session()
+def create_photo(image_url, product, session):
     image = Image(image_url)
     image.product = product
     image_to_db(image, session)
-    session.close()
     return image
 
-def create_tag(tag_name):
-    session = Session()
+def create_tag(tag_name, session):
     tag = Tag(tag_name)
     tag_to_db(tag, session)
-    session.close()
     return tag
 
-def create_category(category_name):
-    session = Session()
+def create_category(category_name, session):
     category = Category(category_name)
     category_to_db(category, session)
-    session.close()
     return category
 
 def create_review(customer_name="John Doe", 
         review_text="Default Review", 
         stars=5, 
-        product=None):
-    session = Session()
+        product=None,
+        session = None):
     review = Review(customer_name, review_text, stars)
     review.product = product
     review_to_db(review, session)
-    session.close()
     return review
 
 
@@ -91,58 +83,48 @@ def category_to_db(category, session):
     return category
 
 
-def get_product(id):
-    session = Session()
+def get_product(id, session):
     resp = {}
     try:
         resp = session.query(Product).get(id)
     except Exception as e:
         resp = {"error": str(e)}
 
-    session.close()
     return resp
 
-def get_all_products():
-    session = Session()
+def get_all_products(session):
     resp = {}
     try:
         resp = session.query(Product).all()
     except Exception as e:
         resp = {"error": str(e)}
 
-    session.close()
     return resp
 
-def get_all_categories():
+def get_all_categories(session):
     resp = {}
-    session = Session()
     try:
         resp = session.query(Category).all()
     except Exception as e:
         resp = {"error": str(e)}
-    session.close()
     return resp
 
-def get_all_tags():
+def get_all_tags(session):
     resp = {}
-    session = Session()
     try:
         resp = session.query(Tag).all()
     except Exception as e:
         resp = {"error": str(e)}
-    session.close()
     return resp
 
 
 #**************************ADMIN UTILITIES********************************
 
-def RIP_METHOD():
-    session = Session()
+def RIP_METHOD(session):
     session.query(Image).delete()
     session.query(Category).delete()
     session.query(Tag).delete()
     session.query(Review).delete()
     session.query(Product).delete()
     session.commit()
-    session.close()
     return True
