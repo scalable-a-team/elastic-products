@@ -38,19 +38,14 @@ example_product = { #this will just be the main info that is cached in ES
     "image_url": "https://www.google.com/images/branding/googlelogo/2x/googlelogo_color_272x92dp.png"
 }
 
-#create product
-@app.route(f'/{ELASTIC_PREFIX}/create', methods=['POST'])
-def publish():
-    resp = {}
-    try:
-        content = request.json
-        doc = content['product']
-        resp = es.index(index='products', body=doc , doc_type="_doc", id=doc['_product_id'])
-    except Exception as e:
-        resp = {"error": str(e)}
-    return resp
-
-#search for a product
+# ****************************SEARCH ES DATABASE FOR PRODUCT***************************
+# SEARCHING FOR A PRODUCT using this method
+# the regular params for the search are null,
+# The HTTP request needs to contain a "?query=<query>" param in order to search
+# otherwise elasticsearch will return no results
+# this is meant to pair with the postgres database where all product info is stored
+# the mapping of ES -> postgres is just the product_id, which is unique for every product
+# use the product id returned by this request to query postgres for the full product listing
 @app.route(f'/{ELASTIC_PREFIX}/search/', methods=['GET'])
 def search():
     resp = {}
@@ -61,18 +56,10 @@ def search():
         resp = {"error": str(e)}
     return resp  
 
-
-@app.route(f'/{ELASTIC_PREFIX}/update', methods=['POST'])
-def update():
-    resp={}
-    try:
-        content = request.json
-        doc = content['product']
-        resp = es.update(index='products', body=doc , doc_type="_doc", id=doc['_product_id'])
-    except Exception as e:
-        resp = {"error": str(e)}
-    return resp    
-
+# **********************DELETE ELASTICSEARCH PRODUCTS************************
+# Right now we can delete just one listing if we want to from elasticsearch
+# However, this method will be depreciated in the future to work better with postgres
+# the delete will happen all in one function and this will no longer be used
 @app.route(f'/{ELASTIC_PREFIX}/delete', methods=['DELETE'])
 def delete():
     resp={}
@@ -85,9 +72,13 @@ def delete():
         resp = {"error": str(e)}
     return resp
 
+
 from base import Session
 
-
+# **********************GET A PRODUCT FROM POSTGRES DB***********************
+# This method will be used to get a product from postgres
+# you need to specify the product_id in the request
+# the product_id is the primary key for the product in postgres
 @app.route(f'/{PRODUCT_LISTING_PREFIX}/<id>', methods=['GET'])
 def fetch_product(id):
     session = Session()
@@ -100,7 +91,13 @@ def fetch_product(id):
     session.close()
     return resp
 
-#publish a product to mongodb using sqalchemy
+# **********************POST A PRODUCT TO POSTGRES DB***********************
+# IMPORTANT INFORMATION !!!!!!!!!!!!!!!!!
+# Phtos are uploaded to s3 first, then the urls must be stored in a list
+# then passed into the json POST request under 'image_url'
+# tags and categories will be pre-made by "staff" and the get_all() method
+# needs to be queried to retreive all possible tags and categories for the user to chose
+# these need to be in list format as well to properly work with the POST request
 @app.route(f'/{PRODUCT_LISTING_PREFIX}/create/product', methods=['POST'])
 def publish_product():
     session = Session()
@@ -116,7 +113,6 @@ def publish_product():
         price = float(product['price'])
 
         images = product['image_url'] #should be a list of urls
-        print(type(images))
 
         image_url = [image for image in images]
         product = create_product(seller_id = seller_id, seller_name = seller_name, product_name = product_name, description= description, price=price, session=session)
@@ -147,6 +143,9 @@ def publish_product_elastic(product_id, seller_id, product_name, description, pr
     resp = es.index(index='products', body=doc , doc_type="_doc", id=product_id)
     return resp
 
+
+
+
 @app.route(f'/{PRODUCT_LISTING_PREFIX}/create/category', methods=['POST'])
 def make_new_category():
     session = Session()
@@ -155,6 +154,9 @@ def make_new_category():
     cat = create_category(category, session)
     session.close()
     return cat.__repr__()
+
+
+
 
 @app.route(f'/{PRODUCT_LISTING_PREFIX}/create/review', methods=['POST'])
 def make_new_review():
@@ -167,6 +169,9 @@ def make_new_review():
     rev = create_review(name, review, stars)
     return rev.__repr__()
 
+
+
+
 @app.route(f'/{PRODUCT_LISTING_PREFIX}/create/tag', methods=['POST'])
 def make_new_tag():
     session = Session()
@@ -175,7 +180,14 @@ def make_new_tag():
     tag_t = create_tag(tag, session)
     return tag_t.__repr__()
 
-#upload a photo to product s3 bucket
+
+
+#***********************UPLOAD A PHOTO TO S3 BUCKET***************************
+# This method will be used to upload a photo to the s3 bucket
+# the returned url will be a publicly accessible url for the photo to be used
+# when creating a product listing
+# during the product creation, all urls should be cached when the user uploads
+# then sent to create_product all together in a list to be added to the product
 @app.route(f'/{PRODUCT_LISTING_PREFIX}/upload_photo', methods=['POST'])
 def upload_photo():
     resp = {}
