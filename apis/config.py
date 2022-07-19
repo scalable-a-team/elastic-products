@@ -1,5 +1,4 @@
 import os
-from accesskeys.acess_keys import *
 
 
 ELASTIC_PREFIX = 'es' #IMPORTANT: This will be static prefix for frontend to querey product search engine, can just change this to change all apis
