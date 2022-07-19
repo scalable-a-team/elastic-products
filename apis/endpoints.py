@@ -108,6 +108,8 @@ def publish_product():
         product_name = product['product_name']
         description = product['description']
         price = float(product['price'])
+        tags = product['tags'] #id's of tags, will be queried later
+        categories = product['categories']#same as tags, use cat id
 
         images = product['image_url'] #should be a list of urls
 
@@ -117,7 +119,10 @@ def publish_product():
             seller_name = seller_name, 
             product_name = product_name, 
             description= description, 
-            price=price)
+            price=price,
+            tags = tags,
+            categories = categories,
+            session = session)
 
         photo_uploads = [create_photo(image, product, session) for image in image_url]
         elastic_response = publish_product_elastic(

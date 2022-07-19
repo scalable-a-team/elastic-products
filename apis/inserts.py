@@ -14,7 +14,8 @@ def create_product(
     session = None):
 
     product = Product(seller_id, seller_name, product_name, description, price)
-    [product.add_tag(session.query(Tag).get(tag)) for tag in tags]
+    product.tags = [(session.query(Tag).get(tag)) for tag in tags]
+    product.categories = [(session.query(Category).get(category)) for category in categories]
     # product.categories = categories
     product_to_db(product, session)
     return product
