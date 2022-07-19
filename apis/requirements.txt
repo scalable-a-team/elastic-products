@@ -3,3 +3,4 @@ elasticsearch == 7.10.0 #must use this version to be compatible with AWS Elastic
 boto3 == 1.12.29
 requests_aws4auth==1.1.2
 psycopg2 == 2.9.3
+sqlalchemy == 1.4.36
