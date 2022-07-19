@@ -125,19 +125,23 @@ def publish_product():
             session = session)
 
         photo_uploads = [create_photo(image, product, session) for image in image_url]
-        elastic_response = publish_product_elastic(
-            product_id = product._id,
-            seller_id = product._seller_id,
-            product_name = product.product_name,
-            description = product.description,
-            price = product.price
-        )
+        es_resp = {}
+        try:
+            es_resp = publish_product_elastic(
+                product_id = product._id,
+                seller_id = product._seller_id,
+                product_name = product.product_name,
+                description = product.description,
+                price = product.price
+            )
+        except Exception as e:
+            es_resp = {"error": str(e)}
         resp = {"product": product.__repr__(), "photo_uploads": [photo.__repr__() for photo in photo_uploads], 
-                "es_service": elastic_response}
+                "es_service": es_resp}
     except Exception as e:
         resp = {"error": str(e)}
     session.close()
-    return resp
+    return jsonify(resp)
 
 def publish_product_elastic(product_id, seller_id, product_name, description, price):
     doc = jsonify({
