@@ -71,3 +71,48 @@ def category_to_db(category):
     session.commit()
     
     return category
+
+
+def get_product(id):
+    resp = {}
+    try:
+        resp = session.query(Product).get(id)
+    except Exception as e:
+        resp = {"error": str(e)}
+    return resp
+
+def get_all_products():
+    resp = {}
+    try:
+        resp = session.query(Product).all()
+    except Exception as e:
+        resp = {"error": str(e)}
+    return resp
+
+def get_all_categories():
+    resp = {}
+    try:
+        resp = session.query(Category).all()
+    except Exception as e:
+        resp = {"error": str(e)}
+    return resp
+
+def get_all_tags():
+    resp = {}
+    try:
+        resp = session.query(Tag).all()
+    except Exception as e:
+        resp = {"error": str(e)}
+    return resp
+
+
+#**************************ADMIN UTILITIES********************************
+
+def RIP_METHOD():
+    session.query(Image).delete()
+    session.query(Category).delete()
+    session.query(Tag).delete()
+    session.query(Review).delete()
+    session.query(Product).delete()
+    session.commit()
+    return True

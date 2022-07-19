@@ -52,14 +52,14 @@ def publish():
     return resp
 
 #search for a product
-@app.route(f'/{ELASTIC_PREFIX}/search', methods=['GET'])
+@app.route(f'/{ELASTIC_PREFIX}/search/', methods=['GET'])
 def search():
     resp = {}
+    query = request.args.get('query', default = "")
     try:
-        content = request.json
-        search_param = content['search_param']
-        print(search_param)
-        resp = es.search(index='products', body={"query": {"match": {"description": search_param}}})
+        # content = request.json
+        # search_param = content['search_param']
+        resp = es.search(index='products', body={"query": {"match": {"description": query}}})
     except Exception as e:
         resp = {"error": str(e)}
     return resp  
@@ -88,17 +88,12 @@ def delete():
         resp = {"error": str(e)}
     return resp
 
-
-#upload a photo to product s3 bucket
-@app.route(f'/{ELASTIC_PREFIX}/upload_photo', methods=['POST'])
-def upload_photo():
+@app.route(f'/{PRODUCT_LISTING_PREFIX}/<id>', methods=['GET'])
+def fetch_product(id):
     resp = {}
+    id = int(id)
     try:
-        seller_id = request.form['seller_id']
-        product_id = request.form['product_id']
-        image = request.files['image']
-        s3_url = upload_product_photo(product_id, seller_id, image) #gets the s3 public url
-        resp = {"s3_url": s3_url}
+        resp = get_product(id).__repr__()
     except Exception as e:
         resp = {"error": str(e)}
     return resp
@@ -140,8 +135,9 @@ def make_new_category():
 def make_new_review():
     content = request.json
     name = content['name']
-    review = content['category']
+    review = content['review']
     stars = int(content['stars'])
+    product = content['product'] #the id of the product we are leaving review on
     rev = create_review(name, review, stars)
     return rev.__repr__()
 
@@ -151,3 +147,56 @@ def make_new_tag():
     tag = content['tag']
     tag_t = create_tag(tag)
     return tag_t.__repr__()
+
+#upload a photo to product s3 bucket
+@app.route(f'/{PRODUCT_LISTING_PREFIX}/upload_photo', methods=['POST'])
+def upload_photo():
+    resp = {}
+    try:
+        seller_id = request.form['seller_id']
+        product_id = request.form['product_id']
+        image = request.files['image']
+        s3_url = upload_product_photo(product_id, seller_id, image) #gets the s3 public url
+        resp = {"s3_url": s3_url}
+    except Exception as e:
+        resp = {"error": str(e)}
+    return resp
+
+
+@app.route(f'/{PRODUCT_LISTING_PREFIX}/categories', methods=['GET'])
+def fetch_categories():
+    lst = get_all_categories()
+    return {"categories": [cat.__repr__() for cat in lst]}
+
+
+@app.route(f'/{PRODUCT_LISTING_PREFIX}/tags', methods=['GET'])
+def fetch_tags():
+    lst = get_all_tags()
+    return {"tags": [tag.__repr__() for tag in lst]}
+
+@app.route(f'/{PRODUCT_LISTING_PREFIX}/all_products', methods=['GET'])
+def fetch_all_products():
+    lst = get_all_products()
+    return {"products": [prod.__repr__() for prod in lst]}
+
+
+#since we delete database need to clear elasticsearch too
+@app.route(f'/admin/delete/database/all', methods=['DELETE'])
+def delete_database():
+    resp = {}
+    try:
+        RIP_METHOD()
+        resp = {"message": "database deleted"}
+    except Exception as e:
+        resp = {"error": str(e)}
+    return resp
+
+@app.route(f'/admin/delete/elasticsearch/all', methods=['DELETE'])
+def delete_elasticsearch():
+    resp = {}
+    try:
+        es.delete_by_query(index='products', body={"query": {"match_all": {}}})
+        resp = {"message": "elasticsearch deleted"}
+    except Exception as e:
+        resp = {"error": str(e)}
+    return resp
