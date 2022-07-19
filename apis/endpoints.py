@@ -6,6 +6,7 @@ from config import *
 from elasticsearch import Elasticsearch, RequestsHttpConnection
 from requests_aws4auth import AWS4Auth
 from inserts import *
+from postdb import Product
 
 
 app = Flask(__name__)
@@ -118,7 +119,7 @@ def publish_product():
             description= description, 
             price=price)
 
-        photo_uploads = [create_photo(image, product) for image in image_url]
+        photo_uploads = [create_photo(image, product, session) for image in image_url]
         elastic_response = publish_product_elastic(
             product_id = product._id,
             seller_id = product._seller_id,
@@ -130,6 +131,7 @@ def publish_product():
                 "es_service": elastic_response}
     except Exception as e:
         resp = {"error": str(e)}
+    session.close()
     return resp
 
 def publish_product_elastic(product_id, seller_id, product_name, description, price):
@@ -152,8 +154,12 @@ def make_new_category():
 
     content = request.json
     category = content['category']
-    cat = create_category(category)
-    return cat.__repr__()
+
+    cat = create_category(category, session)
+    tmp = cat.__repr__()
+    session.close()
+    return tmp
+
 
 
 
@@ -165,9 +171,11 @@ def make_new_review():
     name = content['name']
     review = content['review']
     stars = int(content['stars'])
-    product = content['product'] #the id of the product we are leaving review on
-    rev = create_review(name, review, stars)
-    return rev.__repr__()
+    product_id = content['product'] #the id of the product we are leaving review on
+    rev = create_review(name, review, stars, session.query(Product).get(product_id), session)
+    tmp = rev.__repr__()
+    session.close()
+    return tmp
 
 
 
@@ -177,8 +185,12 @@ def make_new_tag():
 
     content = request.json
     tag = content['tag']
-    tag_t = create_tag(tag)
-    return tag_t.__repr__()
+
+    tag_t = create_tag(tag, session)
+    tmp =  tag_t.__repr__()
+    session.close()
+    return tmp
+
 
 
 
@@ -205,25 +217,30 @@ def upload_photo():
 @app.route(f'/{PRODUCT_LISTING_PREFIX}/categories', methods=['GET'])
 def fetch_categories():
 
-    lst = get_all_categories()
+    session = Session()
+    lst = get_all_categories(session)
+    tmp = {"categories": [cat.__repr__() for cat in lst]}
+    session.close()
+    return tmp
 
-    return {"categories": [cat.__repr__() for cat in lst]}
 
 
 @app.route(f'/{PRODUCT_LISTING_PREFIX}/tags', methods=['GET'])
 def fetch_tags():
-
-    lst = get_all_tags()
-
-    return {"tags": [tag.__repr__() for tag in lst]}
+    session = Session()
+    lst = get_all_tags(session)
+    tmp = {"tags": [tag.__repr__() for tag in lst]}
+    session.close()
+    return tmp
 
 @app.route(f'/{PRODUCT_LISTING_PREFIX}/all_products', methods=['GET'])
 def fetch_all_products():
+    session = Session()
+    lst = get_all_products(session)
+    tmp = {"products": [prod.__repr__() for prod in lst]}
+    session.close()
+    return tmp
 
-    lst = get_all_products()
-
-
-    return {"products": [prod.__repr__() for prod in lst]}
 
 
 #since we delete database need to clear elasticsearch too
