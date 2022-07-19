@@ -121,11 +121,9 @@ def get_all_tags(session):
 
 #**************************ADMIN UTILITIES********************************
 
-def RIP_METHOD(session):
-    session.query(Image).delete()
-    session.query(Category).delete()
-    session.query(Tag).delete()
-    session.query(Review).delete()
-    session.query(Product).delete()
-    session.commit()
+#this will nuke the database and requires a restart of the application to relbuild it
+def RIP_METHOD():
+
+    Base.metadata.drop_all(Engine)
+
     return True

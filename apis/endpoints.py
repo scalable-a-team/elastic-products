@@ -128,11 +128,11 @@ def publish_product():
         es_resp = {}
         try:
             es_resp = publish_product_elastic(
-                product_id = product._id,
-                seller_id = product._seller_id,
-                product_name = product.product_name,
-                description = product.description,
-                price = product.price
+                product_id = int(product._id),
+                seller_id = int(product._seller_id),
+                product_name = str(product.product_name),
+                description = str(product.description),
+                price = float(product.price)
             )
         except Exception as e:
             es_resp = {"error": str(e)}
@@ -143,16 +143,38 @@ def publish_product():
     session.close()
     return jsonify(resp)
 
+
+# THIS METHOD IS FOR USE WHEN THE ELASTIC SEARCH PART OF THE PRODUCT CREATION FAILS
+# THIS METHOD IS CALLED DIRECTLY FROM PRODUCT CREATION, BUT CAN BE RECREATED IF
+# IT FAILS THE FIRST TIME
+@app.route(f'/{ELASTIC_PREFIX}/create/product', methods=['POST'])
+def create_product_elastic():
+    resp = {}
+    try:
+        content = request.json
+        product = content['product']
+
+        product_id = int(product['product_id'])
+        seller_id = int(product['seller_id'])
+        product_name = product['product_name']
+        description = product['description']
+        price = float(product['price'])
+        resp = publish_product_elastic(product_id, seller_id, product_name, description, price)
+    except Exception as e:
+        resp = {"error": str(e)}
+    return resp
+
+
 def publish_product_elastic(product_id, seller_id, product_name, description, price):
-    doc = jsonify({
+    doc = {
         "_product_id": product_id,
         "_supplier_id": seller_id,
         "product_name": product_name,
         "description": description,
         "price": price
-    })
+    }
 
-    resp = es.index(index='products', body=doc, id=product_id)
+    resp = es.index(index='products', body=doc, doc_type="_doc", id=product_id)
     return resp
 
 
@@ -258,12 +280,10 @@ def delete_database():
 
     resp = {}
     try:
-        RIP_METHOD()
-        
-        resp = {"message": "database deleted"}
+        reply = RIP_METHOD()
+        resp = {"message": reply}
     except Exception as e:
         resp = {"error": str(e)}
-
     return resp
 
 @app.route(f'/admin/delete/elasticsearch/all', methods=['DELETE'])
