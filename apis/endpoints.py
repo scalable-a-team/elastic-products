@@ -1,3 +1,4 @@
+import decimal
 from cgitb import text
 from os import write
 from flask import Flask, jsonify, request, json
@@ -102,12 +103,13 @@ def publish_product():
     try:
         content = request.json
         product = content['product']
-
-        seller_name = product['seller_name']
-        seller_id = int(product['seller_id'])
+        seller_id = request.headers['X-Kong-Jwt-Claim-Userid']
+        first_name = request.headers['X-Kong-Jwt-Claim-Firstname']
+        last_name = request.headers['X-Kong-Jwt-Claim-Lastname']
+        seller_name = f"{first_name} {last_name}"
         product_name = product['product_name']
         description = product['description']
-        price = float(product['price'])
+        price = decimal.Decimal(product['price'])
         tags = product['tags'] #id's of tags, will be queried later
         categories = product['categories']#same as tags, use cat id
 
@@ -129,7 +131,7 @@ def publish_product():
         try:
             es_resp = publish_product_elastic(
                 product_id = int(product._id),
-                seller_id = int(product._seller_id),
+                seller_id = product._seller_id,
                 product_name = str(product.product_name),
                 description = str(product.description),
                 price = float(product.price)
@@ -154,8 +156,8 @@ def create_product_elastic():
         content = request.json
         product = content['product']
 
+        seller_id = request.headers['X-Kong-Jwt-Claim-Userid']
         product_id = int(product['product_id'])
-        seller_id = int(product['seller_id'])
         product_name = product['product_name']
         description = product['description']
         price = float(product['price'])
@@ -235,7 +237,7 @@ def make_new_tag():
 def upload_photo():
     resp = {}
     try:
-        seller_id = request.form['seller_id']
+        seller_id = request.headers['X-Kong-Jwt-Claim-Userid']
         product_id = request.form['product_id']
         image = request.files['image']
         s3_url = upload_product_photo(product_id, seller_id, image) #gets the s3 public url

@@ -1,3 +1,5 @@
+from uuid import UUID
+
 from sqlalchemy import Column, Numeric, String, Integer, ForeignKey, DateTime, Boolean, Float, Text, MetaData, Table
 from sqlalchemy.orm import relationship
 from base import Base
@@ -17,7 +19,7 @@ cat_to_product_association = Table('product_categories', Base.metadata,
 class Product(Base):
     __tablename__ = 'products'
     _id = Column(Integer, primary_key=True)
-    _seller_id = Column(Integer)
+    _seller_id = Column(UUID(as_uuid=True))
     seller_name = Column(String)
     product_name = Column(String)
     description = Column(String)
