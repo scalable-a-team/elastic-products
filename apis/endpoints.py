@@ -146,8 +146,6 @@ def publish_product():
         try:
             es_resp = publish_product_elastic(
                 product_id = int(product._id),
-
-                seller_id = product._seller_id,
                 product_name = str(product.product_name),
                 description = str(product.description),
                 price = float(product.price),
@@ -174,7 +172,6 @@ def create_product_elastic():
         content = request.json
         product = content['product']
 
-        seller_id = request.headers['X-Kong-Jwt-Claim-Userid']
         product_id = int(product['product_id'])
         product_name = product['product_name']
         description = product['description']
