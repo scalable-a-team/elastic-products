@@ -8,6 +8,7 @@ from opentelemetry.sdk.trace.export import BatchSpanProcessor
 from opentelemetry.instrumentation.flask import FlaskInstrumentor
 from opentelemetry.instrumentation.botocore import BotocoreInstrumentor
 from opentelemetry.instrumentation.elasticsearch import ElasticsearchInstrumentor
+from opentelemetry.instrumentation.requests import RequestsInstrumentor
 
 def post_fork(server, worker):
     server.log.info("Worker spawned (pid: %s)", worker.pid)
@@ -24,3 +25,4 @@ def post_fork(server, worker):
         FlaskInstrumentor().instrument_app(worker.app.callable)
         BotocoreInstrumentor().instrument()
         ElasticsearchInstrumentor().instrument()
+        RequestsInstrumentor().instrument()
