@@ -51,9 +51,24 @@ example_product = { #this will just be the main info that is cached in ES
 @app.route(f'/{ELASTIC_PREFIX}/search/', methods=['GET'])
 def search():
     resp = {}
-    query = request.args.get('query', default = "")
+    query = str(request.args.get('query', default = ""))
+    after = int(request.args.get('after', default = 0))
+    suggest_size = int(request.args.get('suggest_size', default = 10))
+
     try:
-        resp = es.search(index='products', body={"query": {"match": {"description": query}}})
+
+        if query == "":
+            resp = es.search(index="products", 
+            body={'query': {"match_all": {}}})
+        else:
+            resp = es.search(index='products', body={
+                "query" : { 'match' : { 'searchable': query } },
+                "search_after" : [after],
+                "size": suggest_size,
+                },
+                sort= "_product_id"
+                )
+
     except Exception as e:
         resp = {"error": str(e)}
     return resp  
@@ -80,11 +95,11 @@ def delete():
 # the product_id is the primary key for the product in postgres
 @app.route(f'/{PRODUCT_LISTING_PREFIX}/<id>', methods=['GET'])
 def fetch_product(id):
-
+    session = Session()
     resp = {}
     id = int(id)
     try:
-        resp = get_product(id).__repr__()
+        resp = get_product(id, session).__repr__()
     except Exception as e:
         resp = {"error": str(e)}
     return resp
@@ -131,10 +146,13 @@ def publish_product():
         try:
             es_resp = publish_product_elastic(
                 product_id = int(product._id),
+
                 seller_id = product._seller_id,
                 product_name = str(product.product_name),
                 description = str(product.description),
-                price = float(product.price)
+                price = float(product.price),
+                tags = ",".join([tag.__repr__()["tag_name"] for tag in product.tags]),
+                categories = ",".join([cat.__repr__()["category_name"] for cat in product.categories]),
             )
         except Exception as e:
             es_resp = {"error": str(e)}
@@ -161,26 +179,38 @@ def create_product_elastic():
         product_name = product['product_name']
         description = product['description']
         price = float(product['price'])
-        resp = publish_product_elastic(product_id, seller_id, product_name, description, price)
+        tags = product['tags']
+        categories = product['categories']
+        resp = publish_product_elastic(product_id, product_name, description, price, tags, categories)
     except Exception as e:
         resp = {"error": str(e)}
     return resp
 
+# @app.route(f"/{ELASTIC_PREFIX}/repair", methods=["PATCH"])
+# def repair_es():
+#     resp = {}
+#     session = Session()
+#     try:
+#         products = session.query(Product).all()
+#         for product in products:
+#             #check if product id made it into elasticsearch
+#             es_resp = es.get(index='_products_id', id=product._id)
+#             print(es_resp)
+#     except Exception as e:
+#         resp = {"error": str(e)}
+#     return resp
 
-def publish_product_elastic(product_id, seller_id, product_name, description, price):
+def publish_product_elastic(product_id, product_name, description, price, tags, categories):
     doc = {
         "_product_id": product_id,
-        "_supplier_id": seller_id,
         "product_name": product_name,
         "description": description,
-        "price": price
+        "price": price,
+        "searchable": f'{product_name} {tags} {categories} {description}',
     }
 
     resp = es.index(index='products', body=doc, doc_type="_doc", id=product_id)
     return resp
-
-
-
 
 @app.route(f'/{PRODUCT_LISTING_PREFIX}/create/category', methods=['POST'])
 def make_new_category():
@@ -192,10 +222,6 @@ def make_new_category():
     tmp = cat.__repr__()
     session.close()
     return tmp
-
-
-
-
 
 @app.route(f'/{PRODUCT_LISTING_PREFIX}/create/review', methods=['POST'])
 def make_new_review():
@@ -210,9 +236,6 @@ def make_new_review():
     session.close()
     return tmp
 
-
-
-
 @app.route(f'/{PRODUCT_LISTING_PREFIX}/create/tag', methods=['POST'])
 def make_new_tag():
     session = Session()
@@ -223,9 +246,6 @@ def make_new_tag():
     tmp =  tag_t.__repr__()
     session.close()
     return tmp
-
-
-
 
 #***********************UPLOAD A PHOTO TO S3 BUCKET***************************
 # This method will be used to upload a photo to the s3 bucket
@@ -246,7 +266,6 @@ def upload_photo():
         resp = {"error": str(e)}
     return resp
 
-
 @app.route(f'/{PRODUCT_LISTING_PREFIX}/categories', methods=['GET'])
 def fetch_categories():
 
@@ -255,8 +274,6 @@ def fetch_categories():
     tmp = {"categories": [cat.__repr__() for cat in lst]}
     session.close()
     return tmp
-
-
 
 @app.route(f'/{PRODUCT_LISTING_PREFIX}/tags', methods=['GET'])
 def fetch_tags():
@@ -273,8 +290,6 @@ def fetch_all_products():
     tmp = {"products": [prod.__repr__() for prod in lst]}
     session.close()
     return tmp
-
-
 
 #since we delete database need to clear elasticsearch too
 @app.route(f'/admin/delete/database/all', methods=['DELETE'])
@@ -297,3 +312,18 @@ def delete_elasticsearch():
     except Exception as e:
         resp = {"error": str(e)}
     return resp
+
+@app.route(f'/admin/delete/product/<product_id>', methods=['DELETE'])
+def delete_product(product_id):
+    resp = []
+    try:
+        session = Session()
+        product = session.query(Product).get(product_id)
+        product_id = int(product._id)
+        resp.append(session.delete(product))
+        session.commit()
+        session.close()
+        resp.append(es.delete(index='products', id=product_id))
+    except Exception as e:
+        resp = {"error": str(e)}
+    return {'delete request' : resp }
