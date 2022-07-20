@@ -292,7 +292,7 @@ def fetch_all_products():
     return tmp
 
 #since we delete database need to clear elasticsearch too
-@app.route(f'/admin/delete/database/all', methods=['DELETE'])
+@app.route(f'{PRODUCT_LISTING_PREFIX}/delete/database/all', methods=['DELETE'])
 def delete_database():
 
     resp = {}
@@ -303,7 +303,7 @@ def delete_database():
         resp = {"error": str(e)}
     return resp
 
-@app.route(f'/admin/delete/elasticsearch/all', methods=['DELETE'])
+@app.route(f'{PRODUCT_LISTING_PREFIX}/admin/delete/elasticsearch/all', methods=['DELETE'])
 def delete_elasticsearch():
     resp = {}
     try:
@@ -313,7 +313,7 @@ def delete_elasticsearch():
         resp = {"error": str(e)}
     return resp
 
-@app.route(f'/admin/delete/product/<product_id>', methods=['DELETE'])
+@app.route(f'{PRODUCT_LISTING_PREFIX}/admin/delete/product/<product_id>', methods=['DELETE'])
 def delete_product(product_id):
     resp = []
     try:
