@@ -9,7 +9,5 @@ RUN pip3 install gunicorn
 COPY ./apis /app/
 
 ENV FLASK_APP=app
-
-ENTRYPOINT [ "python" ]
-CMD [ "main.py" ]
+ENTRYPOINT [ "gunicorn", "-c", "gunicorn.config.py", "--bind=0.0.0.0", "--reload", "--timeout", "600", "wsgi:app" ]
 EXPOSE 5000

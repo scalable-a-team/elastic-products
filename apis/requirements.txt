@@ -4,3 +4,25 @@ boto3 == 1.12.29
 requests_aws4auth==1.1.2
 psycopg2 == 2.9.3
 sqlalchemy == 1.4.36
+protobuf <= 3.19
+opentelemetry-instrumentation == 0.32b0
+opentelemetry-distro[otlp] == 0.32b0
+opentelemetry-instrumentation-aws-lambda == 0.32b0
+opentelemetry-instrumentation-dbapi == 0.32b0
+opentelemetry-instrumentation-psycopg2 == 0.32b0
+opentelemetry-instrumentation-logging == 0.32b0
+opentelemetry-instrumentation-sqlite3 == 0.32b0
+opentelemetry-instrumentation-urllib == 0.32b0
+opentelemetry-instrumentation-wsgi == 0.32b0
+opentelemetry-instrumentation-asgi == 0.32b0
+opentelemetry-instrumentation-celery == 0.32b0
+opentelemetry-instrumentation-django == 0.32b0
+opentelemetry-instrumentation-grpc == 0.32b0
+opentelemetry-instrumentation-requests == 0.32b0
+opentelemetry-instrumentation-urllib3 == 0.32b0
+opentelemetry-instrumentation-flask == 0.32b0
+opentelemetry-instrumentation-boto == 0.32b0
+opentelemetry-instrumentation-sqlalchemy == 0.32b0
+opentelemetry-instrumentation-psycopg2 == 0.32b0
+opentelemetry-instrumentation-botocore == 0.32b0
+opentelemetry-instrumentation-elasticsearch == 0.32b0

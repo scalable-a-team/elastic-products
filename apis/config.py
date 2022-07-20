@@ -1,8 +1,8 @@
 import os
 
 
-ELASTIC_PREFIX = 'es' #IMPORTANT: This will be static prefix for frontend to querey product search engine, can just change this to change all apis
-PRODUCT_LISTING_PREFIX = 'products'
+ELASTIC_PREFIX = 'api/product/es' #IMPORTANT: This will be static prefix for frontend to querey product search engine, can just change this to change all apis
+PRODUCT_LISTING_PREFIX = 'api/product'
 user = os.environ.get('POSTGRES_USER')
 password = os.environ.get('POSTGRES_PASSWORD')
 host = os.environ.get('POSTGRES_HOST')
