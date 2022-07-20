@@ -24,3 +24,5 @@ opentelemetry-instrumentation-flask == 0.32b0
 opentelemetry-instrumentation-boto == 0.32b0
 opentelemetry-instrumentation-sqlalchemy == 0.32b0
 opentelemetry-instrumentation-psycopg2 == 0.32b0
+opentelemetry-instrumentation-botocore == 0.32b0
+opentelemetry-instrumentation-elasticsearch == 0.32b0
