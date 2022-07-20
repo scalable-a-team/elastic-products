@@ -8,9 +8,12 @@ from elasticsearch import Elasticsearch, RequestsHttpConnection
 from requests_aws4auth import AWS4Auth
 from inserts import *
 from postdb import Product
-
+from opentelemetry.instrumentation.flask import FlaskInstrumentor
 
 app = Flask(__name__)
+
+FlaskInstrumentor().instrument_app(app)
+
 es = Elasticsearch(
     hosts=ES_HOST,
     http_auth=AWS4Auth(AWS_ACCESS_KEY_ID, AWS_SECRET_KEY, 'ap-southeast-1', 'es'), #For signing the request to Elasticsearch

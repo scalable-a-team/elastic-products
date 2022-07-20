@@ -5,7 +5,6 @@ from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExport
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
-from opentelemetry.instrumentation.flask import FlaskInstrumentor
 from opentelemetry.instrumentation.botocore import BotocoreInstrumentor
 from opentelemetry.instrumentation.elasticsearch import ElasticsearchInstrumentor
 from opentelemetry.instrumentation.requests import RequestsInstrumentor
@@ -22,7 +21,6 @@ def post_fork(server, worker):
             OTLPSpanExporter(endpoint=os.environ.get('OTEL_EXPORTER_OTLP_ENDPOINT'))
         )
         trace.get_tracer_provider().add_span_processor(span_processor)
-        FlaskInstrumentor().instrument_app(worker.app.callable)
         BotocoreInstrumentor().instrument()
         ElasticsearchInstrumentor().instrument()
         RequestsInstrumentor().instrument()
