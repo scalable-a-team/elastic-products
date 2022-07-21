@@ -71,8 +71,8 @@ def search():
                 },
                 sort= "_product_id"
                 ))
-            resp = clean_up_es_response(resp)
-
+        
+        resp = clean_up_es_response(resp)
     except Exception as e:
         resp = {"error": str(e)}
     return resp  
