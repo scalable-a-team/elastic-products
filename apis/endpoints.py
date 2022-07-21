@@ -72,14 +72,7 @@ def search():
 
         if query == "":
             resp = es.search(index="products", 
-            body={'query': {
-                    'bool': {
-                        'should': [
-                            {'searchable': tags},
-                            {'searchable': categories},
-                        ]
-                    },
-                    "match_all": {}
+            body={'query': { "match_all": {}
                 },
                 "from": index_from,
                 "size": page_size
@@ -88,8 +81,8 @@ def search():
         else:
             resp = (es.search(index='products', body={
                 "query" : { 'match' : { 'searchable': f'{query} {tags} {categories}' ,} },
-                                        "from": index_from,
-                                        "size": page_size
+                "from": index_from,
+                "size": page_size
                 },
                 sort= "_product_id",
                 ))
