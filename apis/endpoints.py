@@ -54,7 +54,7 @@ example_product = { #this will just be the main info that is cached in ES
 @app.route(f'/{ELASTIC_PREFIX}/search/', methods=['GET'])
 def search():
     resp = {}
-    query = str(request.args.get('query', default = ""))
+    query = str(request.args.get('query', default = " "))
     index_from = int(request.args.get('from', default = 0))
     page_size = int(request.args.get('size', default = 10))
     tags = str(request.args.get('tags', default = ""))
@@ -62,14 +62,15 @@ def search():
     if tags != "":
         tags = tags.split(' ')
     else:
-        tags = []
+        tags = [' ']
     if categories != "":
         categories = categories.split(' ')
     else:
-        categories = []
-
+        categories = [' ']
+    
+    tags = " + ".join(tags)
+    categories = " + ".join(categories)
     try:
-
         if query == "":
             resp = es.search(index="products", 
             body={'query': { "match_all": {}
@@ -80,7 +81,11 @@ def search():
                 sort= "_product_id")
         else:
             resp = (es.search(index='products', body={
-                "query" : { 'match' : { 'searchable': f'{query} {tags} {categories}' ,} },
+                # "query" : { 'match' : { 'searchable': f'{query} {tags} {categories}' ,} },
+                "query": {"simple_query_string": {"query":  f'({tags}) + ({categories}) + ({query}))',
+                            "fields": ["searchable"],
+                            "default_operator": "or"
+                        }},
                 "from": index_from,
                 "size": page_size
                 },
