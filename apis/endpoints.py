@@ -52,8 +52,8 @@ example_product = { #this will just be the main info that is cached in ES
 def search():
     resp = {}
     query = str(request.args.get('query', default = ""))
-    after = int(request.args.get('after', default = 0))
-    suggest_size = int(request.args.get('suggest_size', default = 10))
+    after = int(request.args.get('from', default = 0))
+    size = int(request.args.get('size', default = 10))
 
     try:
 
@@ -61,33 +61,24 @@ def search():
             resp = es.search(index="products", 
             body={'query': {"match_all": {}}})
         else:
-            resp = es.search(index='products', body={
+            resp = (es.search(index='products', body={
                 "query" : { 'match' : { 'searchable': query } },
-                "search_after" : [after],
-                "size": suggest_size,
+                "from" : [after],
+                "size": size,
                 },
                 sort= "_product_id"
-                )
+                ))
 
     except Exception as e:
         resp = {"error": str(e)}
     return resp  
 
-# **********************DELETE ELASTICSEARCH PRODUCTS************************
-# Right now we can delete just one listing if we want to from elasticsearch
-# However, this method will be depreciated in the future to work better with postgres
-# the delete will happen all in one function and this will no longer be used
-@app.route(f'/{ELASTIC_PREFIX}/delete', methods=['DELETE'])
-def delete():
-    resp={}
-    try:
-        content = request.json
-        doc = content['product']
-        product_id = doc['product_id']
-        resp = es.delete(index='products', id=product_id)
-    except Exception as e:
-        resp = {"error": str(e)}
+def clean_up_es_response(resp):
+    resp = resp['hits']['hits']
+    for i in range(len(resp)):
+        resp[i] = resp[i]['_source']
     return resp
+
 
 # **********************GET A PRODUCT FROM POSTGRES DB***********************
 # This method will be used to get a product from postgres
@@ -103,6 +94,7 @@ def fetch_product(id):
     except Exception as e:
         resp = {"error": str(e)}
     return resp
+
 
 # **********************POST A PRODUCT TO POSTGRES DB***********************
 # IMPORTANT INFORMATION !!!!!!!!!!!!!!!!!
@@ -183,19 +175,6 @@ def create_product_elastic():
         resp = {"error": str(e)}
     return resp
 
-# @app.route(f"/{ELASTIC_PREFIX}/repair", methods=["PATCH"])
-# def repair_es():
-#     resp = {}
-#     session = Session()
-#     try:
-#         products = session.query(Product).all()
-#         for product in products:
-#             #check if product id made it into elasticsearch
-#             es_resp = es.get(index='_products_id', id=product._id)
-#             print(es_resp)
-#     except Exception as e:
-#         resp = {"error": str(e)}
-#     return resp
 
 def publish_product_elastic(product_id, product_name, description, price, tags, categories):
     doc = {
@@ -250,14 +229,13 @@ def make_new_tag():
 # when creating a product listing
 # during the product creation, all urls should be cached when the user uploads
 # then sent to create_product all together in a list to be added to the product
-@app.route(f'/{PRODUCT_LISTING_PREFIX}/upload_photo', methods=['POST'])
+@app.route(f'/{PRODUCT_LISTING_PREFIX}/create/photo', methods=['POST'])
 def upload_photo():
     resp = {}
     try:
         seller_id = request.headers['X-Kong-Jwt-Claim-Userid']
-        product_id = request.form['product_id']
         image = request.files['image']
-        s3_url = upload_product_photo(product_id, seller_id, image) #gets the s3 public url
+        s3_url = upload_product_photo(seller_id, image) #gets the s3 public url
         resp = {"s3_url": s3_url}
     except Exception as e:
         resp = {"error": str(e)}
@@ -289,7 +267,7 @@ def fetch_all_products():
     return tmp
 
 #since we delete database need to clear elasticsearch too
-@app.route(f'/{PRODUCT_LISTING_PREFIX}/delete/database/all', methods=['DELETE'])
+@app.route(f'/{PRODUCT_LISTING_PREFIX}/delete/all', methods=['DELETE'])
 def delete_database():
 
     resp = {}
@@ -300,7 +278,7 @@ def delete_database():
         resp = {"error": str(e)}
     return resp
 
-@app.route(f'/{PRODUCT_LISTING_PREFIX}/admin/delete/elasticsearch/all', methods=['DELETE'])
+@app.route(f'/{ELASTIC_PREFIX}/delete/all', methods=['DELETE'])
 def delete_elasticsearch():
     resp = {}
     try:
@@ -310,7 +288,7 @@ def delete_elasticsearch():
         resp = {"error": str(e)}
     return resp
 
-@app.route(f'/{PRODUCT_LISTING_PREFIX}/admin/delete/product/<product_id>', methods=['DELETE'])
+@app.route(f'/{PRODUCT_LISTING_PREFIX}/delete/<product_id>', methods=['DELETE'])
 def delete_product(product_id):
     resp = []
     try:
@@ -324,3 +302,17 @@ def delete_product(product_id):
     except Exception as e:
         resp = {"error": str(e)}
     return {'delete request' : resp }
+
+# **********************DELETE ELASTICSEARCH PRODUCTS************************
+# Right now we can delete just one listing if we want to from elasticsearch
+# However, this method will be depreciated in the future to work better with postgres
+# the delete will happen all in one function and this will no longer be used
+@app.route(f'/{ELASTIC_PREFIX}/delete/<id>', methods=['DELETE'])
+def delete(id):
+    resp={}
+    try:
+        product_id = id
+        resp = es.delete(index='products', id=product_id)
+    except Exception as e:
+        resp = {"error": str(e)}
+    return resp
