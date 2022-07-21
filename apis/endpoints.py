@@ -55,8 +55,8 @@ example_product = { #this will just be the main info that is cached in ES
 def search():
     resp = {}
     query = str(request.args.get('query', default = ""))
-    after = int(request.args.get('from', default = 0))
-    size = int(request.args.get('size', default = 10))
+    index_from = int(request.args.get('from', default = 0))
+    page_size = int(request.args.get('size', default = 10))
     tags = str(request.args.get('tags', default = ""))
     categories = str(request.args.get('categories', default = ""))
     if tags != "":
@@ -75,13 +75,13 @@ def search():
             body={'query': {"match_all": {}}})
         else:
             resp = (es.search(index='products', body={
-                "from" : after,
-                "size": size,
                 "query" : { 'match' : { 'searchable': query,
                                         'tags' : tags,
                                         'categories': categories} },
                 },
-                sort= "_product_id"
+                sort= "_product_id",
+                from_= index_from,
+                size_=  page_size
                 ))
         
         resp = clean_up_es_response(resp)
