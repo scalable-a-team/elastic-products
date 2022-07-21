@@ -93,6 +93,26 @@ def get_product(id, session):
 
     return resp
 
+
+def get_all_product_by_seller(seller_id, session, size, page):
+    resp = {}
+    try:
+        resp = session.query(Product).filter(Product._seller_id == seller_id).offset((page-1)*size).limit(size)
+    except Exception as e:
+        resp = {"error": str(e)}
+
+    return resp
+
+
+def get_all_product_by_seller_count(seller_id, session):
+    resp = {}
+    try:
+        resp = session.query(Product).filter(Product._seller_id == seller_id).count()
+    except Exception as e:
+        resp = {"error": str(e)}
+
+    return resp
+
 def get_all_products(session):
     resp = {}
     try:

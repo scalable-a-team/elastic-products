@@ -99,6 +99,25 @@ def clean_up_es_response(resp):
     return {"results" : resp}
 
 
+@app.route(f'/{ELASTIC_PREFIX}/seller_products/<seller_id>', methods=['GET'])
+def search(seller_id):
+    session = Session()
+    index_from = int(request.args.get('from', default=1))
+    page_size = int(request.args.get('size', default=10))
+    resp = {}
+    try:
+        product_lists = []
+        products = get_all_product_by_seller(seller_id, session, page_size, index_from)
+        for product in products:
+            product_lists.append(product.__repr__())
+        count = get_all_product_by_seller_count(seller_id, session)
+        resp['total'] = count
+        resp['data'] = product_lists
+    except Exception as e:
+        resp = {"error": str(e)}
+    return resp
+
+
 # **********************GET A PRODUCT FROM POSTGRES DB***********************
 # This method will be used to get a product from postgres
 # you need to specify the product_id in the request
