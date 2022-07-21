@@ -100,7 +100,7 @@ def clean_up_es_response(resp):
 
 
 @app.route(f'/{ELASTIC_PREFIX}/seller_products/<seller_id>', methods=['GET'])
-def search(seller_id):
+def search_seller(seller_id):
     session = Session()
     index_from = int(request.args.get('from', default=1))
     page_size = int(request.args.get('size', default=10))
