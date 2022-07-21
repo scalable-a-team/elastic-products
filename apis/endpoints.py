@@ -186,6 +186,7 @@ def publish_product():
                 price = float(product.price),
                 tags = " ".join([tag.__repr__()["tag_name"] for tag in product.tags]),
                 categories = " ".join([cat.__repr__()["category_name"] for cat in product.categories]),
+                image = image_url
             )
         except Exception as e:
             es_resp = {"error": str(e)}
@@ -213,19 +214,25 @@ def create_product_elastic():
         price = float(product['price'])
         tags = product['tags']
         categories = product['categories']
-        resp = publish_product_elastic(product_id, product_name, description, price, tags, categories)
+        
+        resp = publish_product_elastic(product_id, product_name, description, price, tags, categories, image="")
     except Exception as e:
         resp = {"error": str(e)}
     return resp
 
 
-def publish_product_elastic(product_id, product_name, description, price, tags, categories):
+def publish_product_elastic(product_id, product_name, description, price, tags, categories, image=""):
+    
+    if len(image)>0:
+        image = image[0]
+
     doc = {
         "_product_id": product_id,
         "product_name": product_name,
         "description": description,
         "price": price,
         "searchable": f'{product_name} {tags} {categories} {description}',
+        "thumbnail": image,
     }
 
     resp = es.index(index='products', body=doc, doc_type="_doc", id=product_id)
