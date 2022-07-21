@@ -72,16 +72,20 @@ def search():
 
         if query == "":
             resp = es.search(index="products", 
-            body={'query': {"match_all": {}}})
+            body={'query': {"match_all": {}},
+                "from": index_from,
+                "size": page_size
+            },
+                sort= "_product_id")
         else:
             resp = (es.search(index='products', body={
                 "query" : { 'match' : { 'searchable': query,
                                         'tags' : tags,
                                         'categories': categories} },
+                                        "from": index_from,
+                                        "size": page_size
                 },
                 sort= "_product_id",
-                from_= index_from,
-                size_=  page_size
                 ))
         
         resp = clean_up_es_response(resp)
