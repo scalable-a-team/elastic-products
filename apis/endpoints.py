@@ -71,7 +71,7 @@ def search():
     tags = " + ".join(tags)
     categories = " + ".join(categories)
     try:
-        if query == "":
+        if query == " ":
             resp = es.search(index="products", 
             body={'query': { "match_all": {}
                 },
@@ -82,7 +82,7 @@ def search():
         else:
             resp = (es.search(index='products', body={
                 # "query" : { 'match' : { 'searchable': f'{query} {tags} {categories}' ,} },
-                "query": {"simple_query_string": {"query":  f'({tags}) + ({categories}) + ({query}))',
+                "query": {"simple_query_string": {"query":  f' (({tags}) + ({categories})) + ({query}))',
                             "fields": ["searchable"],
                             "default_operator": "or"
                         }},
