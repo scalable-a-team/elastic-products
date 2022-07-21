@@ -57,6 +57,16 @@ def search():
     query = str(request.args.get('query', default = ""))
     after = int(request.args.get('from', default = 0))
     size = int(request.args.get('size', default = 10))
+    tags = str(request.args.get('tags', default = ""))
+    categories = str(request.args.get('categories', default = ""))
+    if tags != "":
+        tags = tags.split(' ')
+    else:
+        tags = []
+    if categories != "":
+        categories = categories.split(' ')
+    else:
+        categories = []
 
     try:
 
@@ -65,7 +75,9 @@ def search():
             body={'query': {"match_all": {}}})
         else:
             resp = (es.search(index='products', body={
-                "query" : { 'match' : { 'searchable': query } },
+                "query" : { 'match' : { 'searchable': query,
+                                        'tags' : tags,
+                                        'categories': categories} },
                 "from" : [after],
                 "size": size,
                 },
