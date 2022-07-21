@@ -75,11 +75,11 @@ def search():
             body={'query': {"match_all": {}}})
         else:
             resp = (es.search(index='products', body={
+                "from" : after,
+                "size": size,
                 "query" : { 'match' : { 'searchable': query,
                                         'tags' : tags,
                                         'categories': categories} },
-                "from" : [after],
-                "size": size,
                 },
                 sort= "_product_id"
                 ))

@@ -22,7 +22,7 @@ class Product(Base):
     seller_name = Column(String)
     product_name = Column(String)
     description = Column(String)
-    price = Column(Numeric)
+    price = Column(Numeric(precision=12, scale=2))
     created_at = Column(DateTime)
 
     tags = relationship("Tag", secondary=tag_to_product_association)
@@ -46,7 +46,9 @@ class Product(Base):
             'price': self.price,
             'created_at': self.created_at,
             'tags': [tag.tag_name for tag in self.tags],
-            'categories': [category.category_name for category in self.categories]
+            'categories': [category.category_name for category in self.categories],
+            'reviews': [review.__repr__() for review in self.reviews],
+            'images': [image.image_url for image in self.images]
         }
         
     def add_tag(self, tag):
@@ -86,10 +88,17 @@ class Review(Base):
     review_text = Column(String)
     stars = Column(Integer)
     product = relationship("Product", backref="reviews")
-    def __init__(self, customer_name, review_text, stars):
+    def __init__(self, customer_name, review_text, stars, product):
         self.customer_name = customer_name
         self.review_text = review_text
         self.stars = stars
+        self.product = product
+    def __repr__(self) -> str:
+        return {
+            'customer_name': self.customer_name,
+            'review_text': self.review_text,
+            'stars': self.stars,
+        }
 
 #*******************************************TAGS**********************************************************
 
