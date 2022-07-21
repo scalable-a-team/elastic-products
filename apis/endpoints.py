@@ -72,16 +72,22 @@ def search():
 
         if query == "":
             resp = es.search(index="products", 
-            body={'query': {"match_all": {}},
+            body={'query': {
+                    'bool': {
+                        'should': [
+                            {'searchable': tags},
+                            {'searchable': categories},
+                        ]
+                    },
+                    "match_all": {}
+                },
                 "from": index_from,
                 "size": page_size
             },
                 sort= "_product_id")
         else:
             resp = (es.search(index='products', body={
-                "query" : { 'match' : { 'searchable': query,
-                                        'tags' : tags,
-                                        'categories': categories} },
+                "query" : { 'match' : { 'searchable': f'{query} {tags} {categories}' ,} },
                                         "from": index_from,
                                         "size": page_size
                 },
@@ -161,8 +167,8 @@ def publish_product():
                 product_name = str(product.product_name),
                 description = str(product.description),
                 price = float(product.price),
-                tags = ",".join([tag.__repr__()["tag_name"] for tag in product.tags]),
-                categories = ",".join([cat.__repr__()["category_name"] for cat in product.categories]),
+                tags = " ".join([tag.__repr__()["tag_name"] for tag in product.tags]),
+                categories = " ".join([cat.__repr__()["category_name"] for cat in product.categories]),
             )
         except Exception as e:
             es_resp = {"error": str(e)}
