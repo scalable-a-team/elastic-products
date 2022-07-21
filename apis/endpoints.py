@@ -68,6 +68,7 @@ def search():
                 },
                 sort= "_product_id"
                 ))
+            resp = clean_up_es_response(resp)
 
     except Exception as e:
         resp = {"error": str(e)}
@@ -77,7 +78,7 @@ def clean_up_es_response(resp):
     resp = resp['hits']['hits']
     for i in range(len(resp)):
         resp[i] = resp[i]['_source']
-    return resp
+    return {"results" : resp}
 
 
 # **********************GET A PRODUCT FROM POSTGRES DB***********************
