@@ -41,7 +41,7 @@ def create_review(customer_name="John Doe",
         stars=5, 
         product=None,
         session = None):
-    review = Review(customer_name, review_text, stars)
+    review = Review(customer_name, review_text, stars, product)
     review.product = product
     review_to_db(review, session)
     return review
